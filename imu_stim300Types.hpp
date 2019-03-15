@@ -17,19 +17,30 @@ namespace imu_stim300 {
     /** STIM300 temperature sensor **/
     struct Temperature
     {
-	base::Time time;
-	std::vector<base::Temperature> temp;
-	
-	void resize(int size)
-        {
-                temp.resize(size);
-        }
+    	base::Time time;
+    	std::vector<base::Temperature> temp;
 
-        size_t size()
-        {
-            return temp.size();
-        }
+    	void resize(int size)
+            {
+                    temp.resize(size);
+            }
+
+            size_t size()
+            {
+                return temp.size();
+            }
     };
+
+    /** Inclinations are missing in the /base/IMUSensor message type and are therefore added seperately **/
+    struct Inclinations
+  	{
+  		/** Timestamp of the orientation reading */
+  		base::Time time;
+
+  		/** raw inclinometer reading*/
+  		base::Vector3d inc;
+  	};
+
 
     /** Filter Configuration **/
     struct FilterConfiguration

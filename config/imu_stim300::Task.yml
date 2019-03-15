@@ -6,7 +6,8 @@ filter_configuration:
   use_samples_as_theoretical_gravity: true
   use_inclinometers: true
   use_magnetometers: false
-  initial_alignment_samples: 150000 #20min
+  # initial_alignment_samples: 150000 #20min
+  initial_alignment_samples: 100
   correction_frequency: 1.0
 
 init_heading: 45.0
@@ -231,4 +232,3 @@ inclinometer_noise:
     - 0.002
     - 0.002
     - 0.002
-

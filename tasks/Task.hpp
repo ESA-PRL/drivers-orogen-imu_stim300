@@ -32,11 +32,11 @@ namespace imu_stim300 {
 
     static const double GRAVITY_MARGIN = 0.3; /** Accepted error for the gravity value in [m/s^2] **/
 
-    /*! \class Task 
+    /*! \class Task
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
-     * 
+     *
      * \details
      * The name of a TaskContext is primarily defined via:
      \verbatim
@@ -44,7 +44,7 @@ namespace imu_stim300 {
          task('custom_task_name','imu_stim300::Task')
      end
      \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument. 
+     *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
     class Task : public TaskBase
     {
@@ -124,11 +124,11 @@ namespace imu_stim300 {
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
          Task(std::string const& name = "imu_stim300::Task");
-	
-        /** TaskContext constructor for Task 
-         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
-         * 
+
+        /** TaskContext constructor for Task
+         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
+         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
+         *
          */
         Task(std::string const& name, RTT::ExecutionEngine* engine);
 
@@ -165,7 +165,7 @@ namespace imu_stim300 {
          *
          * The error(), exception() and fatal() calls, when called in this hook,
          * allow to get into the associated RunTimeError, Exception and
-         * FatalError states. 
+         * FatalError states.
          *
          * In the first case, updateHook() is still called, and recover() allows
          * you to go back into the Running state.  In the second case, the
@@ -199,10 +199,15 @@ namespace imu_stim300 {
         */
         Eigen::Quaternion<double> deltaHeading(const Eigen::Vector3d &angvelo, Eigen::Matrix4d &oldomega, const double delta_t);
 
+        /** Returns intrinsic euler angles [x,y,z] from three built in inclinometers in the intertial frame of the IMU
+        */
+        base::Vector3d getInclinations(base::Vector3d accelerations);
+
+
 
         /** @brief Port out the values
 	    */
-        void outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<double, true, true> &myfilter, base::samples::IMUSensors &imusamples);
+        void outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<double, true, true> &myfilter, base::samples::IMUSensors &imusamples, imu_stim300::Inclinations &inclintation_samples);
 
         /**
         * @brief This computes the theoretical gravity value according to the WGS-84 ellipsoid Earth model.
@@ -295,4 +300,3 @@ namespace imu_stim300 {
 }
 
 #endif
-

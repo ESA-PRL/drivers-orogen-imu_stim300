@@ -85,7 +85,7 @@ task_context "Task" do
     property('adaptive_config_inc', 'imu_stim300/AdaptiveAttitudeConfig').
         doc 'Adaptive estimation of external inclinometers.'
 
-    #******************************
+    #******************************input_port(
     #**** Location Properties *****
     #******************************
     property('location',"imu_stim300/LocationConfiguration").
@@ -109,6 +109,10 @@ task_context "Task" do
         doc 'provides timestamped IMUReading samples containing the calibrated and compensated sensor readings depending whether the attutide filter is running'+
         'Compensated values are Earth gravity/rotation and bias compensated angular velocity and linear acceleration from the filter.'
 
+    output_port('compensated_inclinations_out', '/imu_stim300/Inclinations').
+        doc 'provides timestamped orientation samples computed from the inclinometers of the IMU'+
+        'Compensated values are bias compensated inclinations from the filter.'
+
     output_port('orientation_samples_out', '/base/samples/RigidBodyState').
         doc 'provides timestamped IMU orientation samples containing the quaternion.'
 
@@ -117,7 +121,7 @@ task_context "Task" do
 
     output_port('timestamp_estimator_status', 'aggregator::TimestampEstimatorStatus').
 	doc 'Debug output of the TimestampEstimator.'
-	
+
     output_port('packet_counter', 'int64_t').
 	doc 'Counter for the incoming packets.'
 
@@ -128,5 +132,3 @@ task_context "Task" do
     fd_driven
 
 end
-
-

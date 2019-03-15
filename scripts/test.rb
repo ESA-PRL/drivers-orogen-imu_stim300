@@ -13,7 +13,7 @@ Orocos.initialize
 
 Orocos::Process.run 'imu_stim300::Task' => 'imu_stim300' do
     # log all the output ports
-    Orocos.log_all_ports 
+    Orocos.log_all_ports
     Orocos.conf.load_dir('../config')
 
     # Get the task
@@ -48,7 +48,7 @@ Orocos::Process.run 'imu_stim300::Task' => 'imu_stim300' do
     Vizkit.exec
 
 #     reader = driver.orientation_samples.reader(:type => :buffer, :size => 100)
-#    loop do        
+#    loop do
 #  	while sample = reader.read_new
 #            print("#{sample.time.to_f} #{sample.orientation.x} #{sample.orientation.y} #{sample.orientation.z} #{sample.orientation.w}\r\n")
 #  	end

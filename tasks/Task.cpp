@@ -262,6 +262,7 @@ void Task::updateHook()
 
     /** Inertial sensor values **/
     base::samples::IMUSensors imusamples;
+    imu_stim300::Inclinations inclintation_samples;
 
     RTT::extras::FileDescriptorActivity* fd_activity =
         getActivity<RTT::extras::FileDescriptorActivity>();
@@ -297,6 +298,7 @@ void Task::updateHook()
         base::Time diffTime = ts - prev_ts;
 
         imusamples.time = ts;
+        inclintation_samples.time = ts;
         prev_ts = ts;
         #ifdef DEBUG_PRINTS
         std::cout<<"Delta time[s]: "<<diffTime.toSeconds()<<"\n";
@@ -307,7 +309,7 @@ void Task::updateHook()
         {
             imusamples.gyro = imu_stim300_driver->getGyroData();
             imusamples.acc = imu_stim300_driver->getAccData();
-            imusamples.mag = imu_stim300_driver->getInclData();//!Short term solution: the mag carries inclinometers info (FINAL SOLUTION REQUIRES: e.g. to change IMUSensor base/types)
+            inclintation_samples.inc = imu_stim300_driver->getInclData();//!Short term solution: the mag carries inclinometers info (FINAL SOLUTION REQUIRES: e.g. to change IMUSensor base/types)
 
             if (_use_filter.value())
             {
@@ -322,7 +324,7 @@ void Task::updateHook()
                         state(INITIAL_ALIGNMENT);
 
                     if (config.use_inclinometers)
-                        initial_alignment_acc.col(initial_alignment_idx) = imusamples.mag;
+                        initial_alignment_acc.col(initial_alignment_idx) = inclintation_samples.inc;
                     else
                         initial_alignment_acc.col(initial_alignment_idx) = imusamples.acc;
 
@@ -464,7 +466,7 @@ void Task::updateHook()
                                     bias_estimation<< " Gyroscopes Bias Offset:\n"<<myfilter.getGyroBias()<<"\n";
                                     bias_estimation<< " Accelerometers Bias Offset:\n"<<myfilter.getAccBias()<<"\n";
                                     bias_estimation<< " Inclinometers Bias Offset:\n"<<myfilter.getInclBias()<<"\n";
-                                    
+
                                 }
                                 else
                                 {
@@ -495,7 +497,7 @@ void Task::updateHook()
                 {
                     double delta_t = diffTime.toSeconds();
                     Eigen::Vector3d acc, gyro, inc;
-                    acc = imusamples.acc; gyro = imusamples.gyro; inc = imusamples.mag;
+                    acc = imusamples.acc; gyro = imusamples.gyro; inc = inclintation_samples.inc;
 
                     if (state() != RUNNING)
                         state(RUNNING);
@@ -553,7 +555,7 @@ void Task::updateHook()
             }
 
             /** Output information **/
-            this->outputPortSamples(imu_stim300_driver, myfilter, imusamples);
+            this->outputPortSamples(imu_stim300_driver, myfilter, imusamples, inclintation_samples);
         }
         else
         {
@@ -615,7 +617,7 @@ Eigen::Quaternion<double> Task::deltaHeading(const Eigen::Vector3d &angvelo, Eig
     return deltahead;
 }
 
-void Task::outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<double, true, true> &myfilter, base::samples::IMUSensors &imusamples)
+void Task::outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<double, true, true> &myfilter, base::samples::IMUSensors &imusamples, imu_stim300::Inclinations &inclintation_samples)
 {
     Eigen::Matrix <double,IKFSTATEVECTORSIZE,IKFSTATEVECTORSIZE> Pk = myfilter.getCovariance();
 
@@ -645,8 +647,10 @@ void Task::outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<doubl
         SubtractEarthRotation(gyro, orientation_out.orientation.inverse(), location.latitude); //gyros minus Earth rotation
         imusamples.gyro = gyro - myfilter.getGyroBias();//gyros minus bias
         imusamples.acc = imusamples.acc - myfilter.getAccBias() - myfilter.getGravityinBody(); //acc minus bias and gravity
-        imusamples.mag = imusamples.mag - myfilter.getInclBias() - myfilter.getGravityinBody(); //inclinometers minus bias and gravity
+        // imusamples.mag = imusamples.mag - myfilter.getInclBias() - myfilter.getGravityinBody(); //inclinometers minus bias and gravity
+        inclintation_samples.inc = getInclinations(inclintation_samples.inc - myfilter.getInclBias()); //inclinometers minus bias and gravity
         _compensated_sensors_out.write(imusamples);
+        _compensated_inclinations_out.write(inclintation_samples);
 
         #ifdef DEBUG_PRINTS
         Eigen::Vector3d euler = base::getEuler(orientation_out.orientation);
@@ -659,5 +663,18 @@ void Task::outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<doubl
 
 }
 
+base::Vector3d Task::getInclinations(base::Vector3d accelerations)
+{
+  base::Vector3d euler_inclinations;
+  euler_inclinations[0] = -(atan2(accelerations[2], accelerations[1]) - M_PI/2);
+  euler_inclinations[1] = (atan2(sqrt(pow(accelerations[1], 2) + pow(accelerations[2], 2)), accelerations[0]) - M_PI/2);
+  euler_inclinations[2] = 0;
 
+  /* Convert to degrees
+  euler_inclinations[0] = euler_inclinations[0]*180/M_PI;
+  euler_inclinations[1] = euler_inclinations[1]*180/M_PI;
+  euler_inclinations[2] = euler_inclinations[2]*180/M_PI;
+*/
 
+  return euler_inclinations;
+}
