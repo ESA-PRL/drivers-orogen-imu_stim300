@@ -15,6 +15,8 @@
 #include <aggregator/TimestampEstimator.hpp>
 #include <rtt/extras/FileDescriptorActivity.hpp>
 
+#include <ctime>
+
 namespace imu_stim300 {
 
     /** WGS-84 ellipsoid constants (Nominal Gravity Model and Earth angular velocity) **/
@@ -51,6 +53,9 @@ namespace imu_stim300 {
 	friend class TaskBase;
 
     protected:
+
+        std::clock_t begin;
+        bool start;
 
         /******************************/
         /*** Control Flow Variables ***/

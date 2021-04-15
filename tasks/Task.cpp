@@ -51,6 +51,9 @@ bool Task::configureHook()
     if (! TaskBase::configureHook())
         return false;
 
+    begin = std::clock();
+    start = true;
+
     /*********************************/
     /** Configuration of the driver **/
     /*********************************/
@@ -259,6 +262,14 @@ bool Task::startHook()
 void Task::updateHook()
 {
     TaskBase::updateHook();
+
+    if (start)
+    {
+        std::clock_t end = std::clock();
+        std::cout << "imu warm up time:" << static_cast<double>(end - begin) / CLOCKS_PER_SEC << std::endl;
+        start = false;
+    }
+
 
     /** Inertial sensor values **/
     base::samples::IMUSensors imusamples;
@@ -641,6 +652,9 @@ void Task::outputPortSamples(imu_stim300::Stim300Base *driver, filter::Ikf<doubl
         orientation_out.orientation = myfilter.getAttitude();
         orientation_out.cov_orientation = Pk.block<3,3>(0,0);
         _orientation_samples_out.write(orientation_out);
+        _heading_samples_out.write(orientation_out.getYaw());
+        _pitch_samples_out.write(orientation_out.getPitch());
+        _roll_samples_out.write(orientation_out.getRoll());
 
         /** Compensated and calibrated inertial sensor **/
         Eigen::Vector3d gyro = imusamples.gyro;
